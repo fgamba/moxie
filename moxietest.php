@@ -41,12 +41,7 @@ function movie_type() {
 		'label'               => __( 'Movies', 'twentysixteen' ),
 		'description'         => __( 'Display Movies on your site', 'twentysixteen' ),
 		'labels'              => $labels,
-		// Features supported in Post Editor
 		'supports'            => array( 'title' ),
-		/* A hierarchical post is like Pages and can have
-		* Parent and child items. A non-hierarchical CPT
-		* is like Posts.
-		*/	
 		'hierarchical'        => false,
 		'public'              => true,
 		'show_ui'             => true,
@@ -58,23 +53,19 @@ function movie_type() {
 		'has_archive'         => true,
 		'exclude_from_search' => false,
 		'publicly_queryable'  => true,
-		'capability_type'     => 'post',
+		'capability_type'     => 'post'
 	);
 	
 	register_post_type( 'movie', $args );
 	
-	/*$tax_args = array(
-        'label'   => 'Movies Tags',
-    );
-    register_taxonomy( 'moxie_movie_tag', 'moxie_movie', $tax_args );*/
-
+	$taxonomie_args	= array(
+		'rewrite'           => array( 'slug' => 'movies-api' ),
+		'show_in_rest'       => true,
+        'rest_base'          => 'movies-api',
+		'rest_controller_class' => 'WP_REST_Posts_Controller' 
+	);
+	register_taxonomy( 'movies-api', array( 'movie' ), $taxonomie_args );
 }
-
-/* Hook into the 'init' action so that the function
-* Containing our post type registration is not 
-* unnecessarily executed. 
-*/
-
 add_action( 'init', 'movie_type', 0 );
 
 
@@ -84,25 +75,25 @@ function moxie_add_custom_box() {
     $screens = array( 'post', 'movie' );
     foreach ( $screens as $screen ) {
         add_meta_box(
-            'moxie_rating_id',     // Unique ID
+            '_moxie_rating_id',     // Unique ID
             'Rating',      		// Box title
             'moxie_rating',  	// Content callback
              $screen            // post type
         );
 		add_meta_box(
-            'moxie_description_id',     // Unique ID
+            '_moxie_description_id',     // Unique ID
             'Description',      		// Box title
             'moxie_description',  	// Content callback
              $screen            // post type
         );
 		add_meta_box(
-            'moxie_posterurl_id',     // Unique ID
+            '_moxie_posterurl_id',     // Unique ID
             'Poster URL',      		// Box title
             'moxie_poster',  	// Content callback
              $screen            // post type
         );
 		add_meta_box(
-            'moxie_year_id',     // Unique ID
+            '_moxie_year_id',     // Unique ID
             'Year',      		// Box title
             'moxie_year',  	// Content callback
              $screen            // post type
@@ -114,8 +105,8 @@ function moxie_add_custom_box() {
 function moxie_rating() { 
 	global $post; ?>
 	 <p>
-		<label for="moxie_rating_id"> Enter the rating of the movie</label>
-		<input type="text" name="moxie_rating_id" id="moxie_rating_id"  value="<?php echo esc_attr( get_post_meta( $post->ID, 'moxie_rating_id', true ) ); ?>" />
+		<label for="_moxie_rating_id"> Enter the rating of the movie</label>
+		<input type="text" name="_moxie_rating_id" id="_moxie_rating_id"  value="<?php echo esc_attr( get_post_meta( $post->ID, '_moxie_rating_id', true ) ); ?>" />
 	 </p>
 <?php }
 
@@ -123,8 +114,8 @@ function moxie_rating() {
 function moxie_description() {
 	global $post;	?>
 	 <p>
-		<label for="moxie_description_id"> Enter the Description of the movie</label>
-		<textarea cols="50" rows="5" name="moxie_description_id" id="moxie_description_id"  ><?php echo esc_attr( get_post_meta( $post->ID, 'moxie_description_id', true ) ); ?></textarea>
+		<label for="_moxie_description_id"> Enter the Description of the movie</label>
+		<textarea cols="50" rows="5" name="_moxie_description_id" id="_moxie_description_id"  ><?php echo esc_attr( get_post_meta( $post->ID, '_moxie_description_id', true ) ); ?></textarea>
 	 </p>
 <?php }
 
@@ -132,8 +123,8 @@ function moxie_description() {
 function moxie_poster() { 
 	global $post ?>
 	 <p>
-		<label for="moxie_posterurl_id"> Enter the URL of the poster of the movie</label>
-		<input type="text" name="moxie_posterurl_id" size="60" id="moxie_posterurl_id"  value="<?php echo esc_attr( get_post_meta( $post->ID, 'moxie_posterurl_id', true ) ); ?>" />
+		<label for="_moxie_posterurl_id"> Enter the URL of the poster of the movie</label>
+		<input type="text" name="_moxie_posterurl_id" size="60" id="_moxie_posterurl_id"  value="<?php echo esc_attr( get_post_meta( $post->ID, '_moxie_posterurl_id', true ) ); ?>" />
 	 </p>
 <?php }
 
@@ -141,8 +132,8 @@ function moxie_poster() {
 function moxie_year() { 
 	global $post ?>
 	 <p>
-		<label for="moxie_year_id"> Enter the year of the movie</label>
-		<input type="text" name="moxie_year_id" id="moxie_year_id"  value="<?php echo get_post_meta( $post->ID, 'moxie_year_id', true) ; ?>" />
+		<label for="_moxie_year_id"> Enter the year of the movie</label>
+		<input type="text" name="_moxie_year_id" id="_moxie_year_id"  value="<?php echo get_post_meta( $post->ID, '_moxie_year_id', true) ; ?>" />
 	 </p>
 <?php }
 
@@ -157,10 +148,10 @@ function moxie_save_meta($post_id, $post) {
 	// OK, we're authenticated: we need to find and save the data
 	// We'll put it into an array to make it easier to loop though.
 	
-	$year_meta['moxie_year_id'] = $_POST['moxie_year_id'];
-	$description_meta['moxie_description_id'] = $_POST['moxie_description_id'];
-	$posterurl_meta['moxie_posterurl_id'] = $_POST['moxie_posterurl_id'];
-	$rating_meta['moxie_rating_id'] = $_POST['moxie_rating_id'];
+	$year_meta['_moxie_year_id'] = $_POST['_moxie_year_id'];
+	$description_meta['_moxie_description_id'] = $_POST['_moxie_description_id'];
+	$posterurl_meta['_moxie_posterurl_id'] = $_POST['_moxie_posterurl_id'];
+	$rating_meta['_moxie_rating_id'] = $_POST['_moxie_rating_id'];
 	
 	// Add values of $year_meta as custom fields
 	foreach ($year_meta as $key => $value) { // Cycle through the $year_meta array!
@@ -174,41 +165,111 @@ function moxie_save_meta($post_id, $post) {
 		if(!$value) delete_post_meta($post->ID, $key); // Delete if blank
 	}
 	// Add values of $description_meta as custom fields
-	foreach ($description_meta as $key => $value) { // Cycle through the $year_meta array!
-		if( $post->post_type == 'revision' ) return; // Don't store custom data twice
-		$value = implode(',', (array)$value); // If $value is an array, make it a CSV (unlikely)
-		if(get_post_meta($post->ID, $key, FALSE)) { // If the custom field already has a value
+	foreach ($description_meta as $key => $value) { 
+		if( $post->post_type == 'revision' ) return; 
+		$value = implode(',', (array)$value); 
+		if(get_post_meta($post->ID, $key, FALSE)) {
 			update_post_meta($post->ID, $key, $value);
-		} else { // If the custom field doesn't have a value
+		} else { 
 			add_post_meta($post->ID, $key, $value);
 		}
-		if(!$value) delete_post_meta($post->ID, $key); // Delete if blank
+		if(!$value) delete_post_meta($post->ID, $key); 
 	}
 	// Add values of $posterurl_meta as custom fields
-	foreach ($posterurl_meta as $key => $value) { // Cycle through the $year_meta array!
-		if( $post->post_type == 'revision' ) return; // Don't store custom data twice
-		$value = implode(',', (array)$value); // If $value is an array, make it a CSV (unlikely)
-		if(get_post_meta($post->ID, $key, FALSE)) { // If the custom field already has a value
+	foreach ($posterurl_meta as $key => $value) { 
+		if( $post->post_type == 'revision' ) return; 
+		$value = implode(',', (array)$value); 
+		if(get_post_meta($post->ID, $key, FALSE)) { 
 			update_post_meta($post->ID, $key, $value);
-		} else { // If the custom field doesn't have a value
+		} else { 
 			add_post_meta($post->ID, $key, $value);
 		}
-		if(!$value) delete_post_meta($post->ID, $key); // Delete if blank
+		if(!$value) delete_post_meta($post->ID, $key); 
 	}
 	// Add values of $rating_meta as custom fields
-	foreach ($rating_meta as $key => $value) { // Cycle through the $year_meta array!
-		if( $post->post_type == 'revision' ) return; // Don't store custom data twice
-		$value = implode(',', (array)$value); // If $value is an array, make it a CSV (unlikely)
-		if(get_post_meta($post->ID, $key, FALSE)) { // If the custom field already has a value
+	foreach ($rating_meta as $key => $value) { 
+		if( $post->post_type == 'revision' ) return; 
+		$value = implode(',', (array)$value); 
+		if(get_post_meta($post->ID, $key, FALSE)) { 
 			update_post_meta($post->ID, $key, $value);
-		} else { // If the custom field doesn't have a value
+		} else { 
 			add_post_meta($post->ID, $key, $value);
 		}
-		if(!$value) delete_post_meta($post->ID, $key); // Delete if blank
+		if(!$value) delete_post_meta($post->ID, $key); 
 	}
 
 }
 
 add_action('save_post', 'moxie_save_meta', 1, 2); // save the custom fields
 
+// Creating the endopoint
+function moxie_movies_endpoint() {
+    add_rewrite_tag( '%movie%', '([^&]+)' );
+    add_rewrite_rule( 'movies-api/([^&]+)/?', 'index.php?movie=$matches[1]', 'top' );
+}
+add_action( 'init', 'moxie_movies_endpoint' );
+
+/*
+* get data from the custom posts
+*/
+function moxie_movie_get_data() {
+	global $wp_query;
+	
+	$movie_data = array();
+    $args = array(
+        'post_type'      => 'movie',
+        'posts_per_page' => 100
+    );
+    $movie_query = new WP_Query( $args );
+    if ( $movie_query->have_posts() ) : while ( $movie_query->have_posts() ) : $movie_query->the_post();
+		$description = get_post_meta( get_the_ID(), '_moxie_description_id' );
+		$year		 = get_post_meta( get_the_ID(), '_moxie_year_id' );
+		$rating		 = get_post_meta( get_the_ID(), '_moxie_rating_id' );
+		
+        $movie_data[] = array(
+			'id'			=> get_the_ID(),
+            'title' 		=> get_the_title(),
+			'description' 	=> $description,
+			'year'			=> $year,
+			'rating'		=> $rating
+        );
+    endwhile; wp_reset_postdata(); endif;
+	return $movie_data;
+}
+
+/*
+* Show custom post data using the rewrite rule
+*/
+function moxie_movie_endpoint_data() {
+    global $wp_query;
+	
+	$movie_tag = $wp_query->get( 'movie' );
+	
+    if ( ! $movie_tag ) {
+        return; 
+    }
+    $movie_data	= moxie_movie_get_data();
+    
+    wp_send_json( $movie_data );
+	wp_die();
+}
+add_action( 'template_redirect', 'moxie_movie_endpoint_data' );
+
+// add shortcode
+function list_movies() {
+	$movie_data	= moxie_movie_get_data();
+	if(!empty($movie_data)) {
+		$html	= '{ <br/> data:[ <br/>';
+		foreach($movie_data as $movie) {
+			$html	.= '{<br/> id: '.$movie["id"].',<br/>title: '.$movie["title"].',<br/>poster URL: '.$movie[0]["poster_url"].',<br/>rating: '.$movie[0]["rating"].',<br/>year: '.$movie[0]["year"].'<br/>description: '.$movie[0]["description"].'},';
+		}
+		$html	.= ']<br/>} <br/>';		
+		return $html;
+	} else {
+		return "No movies to show yet.";
+	}
+	
+}
+
+add_shortcode( 'list-movies', 'list_movies' );
 ?>
